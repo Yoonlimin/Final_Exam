@@ -1,19 +1,17 @@
-"use client";
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+'use client';
+import { useState, useEffect } from 'react';
+import { useRouter, useParams } from 'next/navigation';
 
 export default function CustomerDetails() {
   const [customer, setCustomer] = useState(null);
-  const [error, setError] = useState(null); // State to handle errors
-  const { id } = useParams(); // Get the customer ID from the URL
+  const [error, setError] = useState(null);
+  const { id } = useParams(); // Access the ID from the URL using useParams
   const router = useRouter();
 
-  // Fetch customer details when the page loads
+  // Fetch customer details when the ID is available
   useEffect(() => {
     if (id) {
       fetchCustomerDetails(id);
-    } else {
-      setError("No customer ID provided");
     }
   }, [id]);
 
@@ -22,24 +20,30 @@ export default function CustomerDetails() {
     try {
       const response = await fetch(`/api/customer/${customerId}`);
 
-      // Check if response is OK
+      // Check if the response is OK (status in the range 200-299)
       if (!response.ok) {
-        throw new Error(`Error fetching customer details: ${response.statusText}`);
+        throw new Error('Network response was not ok');
       }
 
       const data = await response.json();
       setCustomer(data);
-    } catch (error) {
-      console.error("Failed to fetch customer details:", error);
-      setError(error.message); // Set the error state
+    } catch (err) {
+      console.error('Failed to fetch customer details:', err);
+      setError('Failed to fetch customer details. Please try again later.');
     }
   }
 
-  // Render loading state or error state
-  if (error) {
-    return <div>Error loading customer details: {error}</div>;
+  // Handle scenarios where ID is not available yet
+  if (!id) {
+    return <div>Please wait while we get the customer ID...</div>;
   }
 
+  // If there's an error, display it
+  if (error) {
+    return <div className="text-red-500">{error}</div>;
+  }
+
+  // Show loading state while customer data is being fetched
   if (!customer) {
     return <div>Loading...</div>;
   }
@@ -53,10 +57,7 @@ export default function CustomerDetails() {
         <p><strong>Member Number:</strong> {customer.memberNumber}</p>
         <p><strong>Interests:</strong> {customer.interests}</p>
       </div>
-      <button 
-        className="bg-blue-500 text-white px-4 py-2 rounded mt-4" 
-        onClick={() => router.push('/customer')}
-      >
+      <button className="bg-blue-500 text-white px-4 py-2 rounded mt-4" onClick={() => router.push('/customer')}>
         Back to Customers
       </button>
     </div>
